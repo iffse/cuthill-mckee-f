@@ -1,16 +1,34 @@
+! Cuthill-McKee algorithm module
+! Copyright © 2023 iff
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU Affero General Public License as
+! published by the Free Software Foundation, either version 3 of the
+! License, or (at your option) any later version.
+
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Affero General Public License for more details.
+
+! You should have received a copy of the GNU Affero General Public License
+! along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+! ======================================================================
+
 ! This module contains the Cuthil-McKee algorithm for computing a permutation
 ! vector for a given connection list or adjacency matrix.
-!
+
 ! By connection list we mean a matrix, where the rows represent a cell (edge,
 ! triangle, square, etc.) and the columns represent the nodes that are forming
 ! the cell. For cells with more than 3 nodes, the node at index i should be
 ! connected to the nodes at indices i-1 and i+1.
-!
+
 ! By adjacency matrix we mean a matrix, where the rows and columns represent
 ! the nodes of the graph and the values represent whether the nodes are
 ! connected or not. The matrix should be symmetric, with the diagonal being
 ! all zeros. The matrix is represented as a boolean matrix.
-!
+
 ! Functions:
 !   - CM_from_list: returns a permutation vector as computed by the
 !                   Cuthil-McKee algorithm, with connection list as argument
