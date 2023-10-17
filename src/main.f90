@@ -92,8 +92,8 @@ program cuthill_mckee_example
 	allocate(rperm2(n_nodes))
 	perm = CM_from_list(triangles)
 	perm2 = CM_from_matrix(adjacency_matrix)
-	rperm = RCM_from_list(triangles)
-	rperm2 = RCM_from_matrix(adjacency_matrix)
+	rperm = reverse(perm)
+	rperm2 = reverse(perm2)
 
 	if (any(perm /= perm2)) then
 		write(*,*) "Error: Permutations do not match"

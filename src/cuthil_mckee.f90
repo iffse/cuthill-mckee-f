@@ -19,10 +19,13 @@
 ! This module contains the Cuthil-McKee algorithm for computing a permutation
 ! vector for a given connection list or adjacency matrix.
 
-! By connection list we mean a matrix, where the rows represent a cell (edge,
+! By list of cell we mean a matrix, where the rows represent a cell (edge,
 ! triangle, square, etc.) and the columns represent the nodes that are forming
 ! the cell. For cells with more than 3 nodes, the node at index i should be
 ! connected to the nodes at indices i-1 and i+1.
+
+! By connection list we mean a matrix, where the rows represent a node and the
+! columns represent the nodes that are connected to the node at the row index.
 
 ! By adjacency matrix we mean a matrix, where the rows and columns represent
 ! the nodes of the graph and the values represent whether the nodes are
@@ -31,17 +34,19 @@
 
 ! Functions:
 !   - CM_from_list: returns a permutation vector as computed by the
-!                   Cuthil-McKee algorithm, with connection list as argument
+!                   Cuthil-McKee algorithm, with a list of cell as argument
+!   - CM_from_connection: returns a permutation vector as computed by the
+!                         Cuthil-McKee algorithm, with connection list as argument
 !   - CM_from_matrix: returns a permutation vector as computed by the
 !                     Cuthil-McKee algorithm, with adjacency matrix as argument
-!   - RCM_from_list & RCM_from_matrix: returns the reverse of the permutation
+!   - reverse: returns the vector in reverse order. Use this for RCM.
 
 module cuthill_mckee_module
 	implicit none
 
 	private
-	public :: CM_from_matrix, RCM_from_matrix
-	public :: CM_from_list, RCM_from_list
+	public :: CM_from_matrix, CM_from_list, CM_from_connection
+	public :: reverse
 
 contains
 	! Returns a permutation vector as computed by the Cuthil-McKee algorithm
@@ -127,52 +132,31 @@ contains
 	! Returns the reverse of the given permutation vector
 	! args:
 	!	A: the adjacency matrix of the graph, represented as a boolean matrix
-	function RCM_from_matrix(A) result(R)
-		logical, intent(in) :: A(:,:)
-		integer, allocatable :: P(:), R(:)
-		integer :: n, i
-
-		n = size(A, 1)
-		allocate(P(n))
-		allocate(R(n))
-
-		P = CM_from_matrix(A)
-		! reverse the array
-		do i = 1, n
-			R(i) = n - (P(i) - 1)
-		end do
-	end function RCM_from_matrix
-
-	function get_degree_from_matrix(A) result(deg)
-		logical, intent(in) :: A(:,:)
-		integer :: i, j, n
-		integer, allocatable :: deg(:)
-
-		n = size(A, 1)
-		allocate(deg(n))
-
-		deg = 0
-		do i = 1, n
-			do j = 1, n
-				if (A(i,j)) deg(i) = deg(i) + 1
-			end do
-		end do
-	end function get_degree_from_matrix
-
 	function CM_from_list(L) result(perm)
 		integer, intent(in) :: L(:,:)
-		integer :: i, j, k, n, num, new_num, min_deg, min_idx, count
-		integer, allocatable :: C(:,:), degree(:), perm(:), queue(:), new_queue(:)
-		logical, allocatable :: visited(:)
+		integer, allocatable :: C(:,:), perm(:)
+		integer :: n
 
 		n = maxval(L)
+		allocate(C(n, 2))
+		C = get_connected_nodes_from_list(L)
+		allocate(perm(n))
+		perm = CM_from_connection(C)
+	end function CM_from_list
+
+	function CM_from_connection(C) result(perm)
+		integer, intent(in) :: C(:,:)
+		integer :: i, j, k, n, num, new_num, min_deg, min_idx, count
+		integer, allocatable :: degree(:), perm(:), queue(:), new_queue(:)
+		logical, allocatable :: visited(:)
+
+		n = maxval(C)
 
 		allocate(perm(n))
 		allocate(queue(1))
 		allocate(new_queue(2))
 		allocate(visited(n))
 		allocate(degree(n))
-		allocate(C(n, 2))
 
 		new_queue = 0
 		perm = 0
@@ -182,19 +166,16 @@ contains
 		num = 0
 		new_num = 0
 
-
-		C = 0
-		C = get_connected_nodes_from_list(L)
 		degree = get_degree_from_list(C)
 
 		do count = 1, n
 			min_deg = n + 1
 
 			if (num == 0) then
-					if (count /= 1) then
-						write(*,*) "Error: graph is not connected"
-						stop 1
-					end if
+				if (count /= 1) then
+					write(*,*) "Error: graph is not connected"
+					stop 1
+				end if
 				do i = 1, n
 					if (degree(i) < min_deg) then
 						min_deg = degree(i)
@@ -243,24 +224,36 @@ contains
 				new_queue = 0
 			end if
 		end do
+	end function CM_from_connection
 
-	end function CM_from_list
-
-	function RCM_from_list(L) result(R)
-		integer, intent(in) :: L(:,:)
+	function reverse(P) result(R)
 		integer, allocatable :: P(:), R(:)
 		integer :: n, i
 
-		n = maxval(L)
-		allocate(P(n))
+		n = size(P)
 		allocate(R(n))
 
-		P = CM_from_list(L)
 		! reverse the array
 		do i = 1, n
 			R(i) = n - (P(i) - 1)
 		end do
-	end function RCM_from_list
+	end function reverse
+
+	function get_degree_from_matrix(A) result(deg)
+		logical, intent(in) :: A(:,:)
+		integer :: i, j, n
+		integer, allocatable :: deg(:)
+
+		n = size(A, 1)
+		allocate(deg(n))
+
+		deg = 0
+		do i = 1, n
+			do j = 1, n
+				if (A(i,j)) deg(i) = deg(i) + 1
+			end do
+		end do
+	end function get_degree_from_matrix
 
 	function get_connected_nodes_from_list(L) result(C)
 		integer, intent(in) :: L(:,:)
