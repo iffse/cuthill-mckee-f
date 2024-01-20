@@ -1,4 +1,4 @@
-# Cuthil-Mckee Reordering
+# Cuthill-Mckee Reordering
 
 Fortran module for (Reverse) Cuchil-Mckee Reordering.
 
@@ -8,13 +8,13 @@ An example comparison of the nodes before and after reordering:
 
 ## Usage
 
-The [module file](./src/cuthil_mckee.f90) has no dependencies and can be integrated directly into your workflow. It contains the following functions:
+The [module file](./src/cuthill_mckee.f90) has no dependencies and can be integrated directly into your workflow. It contains the following functions:
 
 Functions:
 
-- `CM_from_list`: Returns a permutation vector as computed by the Cuthil-McKee algorithm, with a list of cell as argument
-- `CM_from_connection`: Returns a permutation vector as computed by the Cuthil-McKee algorithm, with connection list as argument
-- `CM_from_matrix`: Returns a permutation vector as computed by the Cuthil-McKee algorithm, with adjacency matrix as argument
+- `CM_from_list`: Returns a permutation vector as computed by the Cuthill-McKee algorithm, with a list of cell as argument
+- `CM_from_connection`: Returns a permutation vector as computed by the Cuthill-McKee algorithm, with connection list as argument
+- `CM_from_matrix`: Returns a permutation vector as computed by the Cuthill-McKee algorithm, with adjacency matrix as argument
 - `reverse`: Returns the vector in reverse order. Use this for RCM.
 
 By list of cell we mean a matrix, where the rows represent a cell (edge, triangle, square, etc.) and the columns represent the nodes that are forming the cell. For cells with more than 3 nodes, the node at index i should be connected to the nodes at indices i-1 and i+1.

@@ -16,7 +16,7 @@
 
 ! ======================================================================
 
-! This module contains the Cuthil-McKee algorithm for computing a permutation
+! This module contains the Cuthill-McKee algorithm for computing a permutation
 ! vector for a given connection list or adjacency matrix.
 
 ! By list of cell we mean a matrix, where the rows represent a cell (edge,
@@ -34,11 +34,11 @@
 
 ! Functions:
 !   - CM_from_list: returns a permutation vector as computed by the
-!                   Cuthil-McKee algorithm, with a list of cell as argument
+!                   Cuthill-McKee algorithm, with a list of cell as argument
 !   - CM_from_connection: returns a permutation vector as computed by the
-!                         Cuthil-McKee algorithm, with connection list as argument
+!                         Cuthill-McKee algorithm, with connection list as argument
 !   - CM_from_matrix: returns a permutation vector as computed by the
-!                     Cuthil-McKee algorithm, with adjacency matrix as argument
+!                     Cuthill-McKee algorithm, with adjacency matrix as argument
 !   - reverse: returns the vector in reverse order. Use this for RCM.
 
 module cuthill_mckee_module
@@ -46,10 +46,10 @@ module cuthill_mckee_module
 
 	private
 	public :: CM_from_matrix, CM_from_list, CM_from_connection
-	public :: reverse
+	public :: reverse, get_connected_nodes_from_list
 
 contains
-	! Returns a permutation vector as computed by the Cuthil-McKee algorithm
+	! Returns a permutation vector as computed by the Cuthill-McKee algorithm
 	! args:
 	!	A: the adjacency matrix of the graph, represented as a boolean matrix
 	function CM_from_matrix(A) result(perm)
@@ -138,9 +138,7 @@ contains
 		integer :: n
 
 		n = maxval(L)
-		allocate(C(n, 2))
 		C = get_connected_nodes_from_list(L)
-		allocate(perm(n))
 		perm = CM_from_connection(C)
 	end function CM_from_list
 
@@ -153,10 +151,8 @@ contains
 		n = maxval(C)
 
 		allocate(perm(n))
-		allocate(queue(1))
-		allocate(new_queue(2))
+		allocate(new_queue(4))
 		allocate(visited(n))
-		allocate(degree(n))
 
 		new_queue = 0
 		perm = 0
@@ -173,7 +169,7 @@ contains
 
 			if (num == 0) then
 				if (count /= 1) then
-					write(*,*) "Error: graph is not connected"
+					write(*,*) "Error: graph is not connected at node ", count
 					stop 1
 				end if
 				do i = 1, n
@@ -207,7 +203,8 @@ contains
 			! add the neighbors of the current vertex to the new queue
 			do i = 1, size(C, 2)
 				j = C(min_idx, i)
-				if (j /= 0 .and. .not. visited(j)) then
+				if (j == 0) exit
+				if (.not. visited(j)) then
 					call add_vec(new_queue, new_num, j)
 					visited(j) = .true.
 				end if
@@ -216,13 +213,13 @@ contains
 			if (num == 0) then
 				! copy the new queue to the queue
 				i = size(new_queue)
-				deallocate(queue)
+				if (allocated(queue)) deallocate(queue)
 				call move_alloc(new_queue, queue)
 				num = new_num
 				new_num = 0
 				allocate(new_queue(i))
-				new_queue = 0
 			end if
+
 		end do
 	end function CM_from_connection
 
@@ -270,7 +267,10 @@ contains
 		do i = 1, n
 			do j = 1, size(L, 2)
 				curr = L(i, j)
-				if (j == size(L, 2) .or. L(i, j + 1) == 0) then
+				if (curr == 0) exit
+				if (j == size(L, 2)) then
+					next = L(i, 1)
+				else if (L(i, j + 1) == 0) then
 					next = L(i, 1)
 				else
 					next = L(i, j + 1)
@@ -348,6 +348,7 @@ contains
 		integer, allocatable :: tmp(:,:)
 
 		do i = 1, size(M, 2)
+			if (M(node, i) == conn) return
 			if (M(node, i) == 0) then
 				M(node, i) = conn
 				return
